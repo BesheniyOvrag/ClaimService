@@ -1,16 +1,18 @@
 package com.example.claim_checker.service;
 
+import com.example.claim_checker.exception.InvalidUserClaimException;
 import com.example.claim_checker.model.ClaimRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import okhttp3.*;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class OpenAiService {
+public class AiService {
 
     @Value("${ollama.api.url}")
     private String apiUrl;
@@ -24,12 +26,11 @@ public class OpenAiService {
         try {
             OkHttpClient client = new OkHttpClient();
 
-            String prompt = "Ты — ассистент медицинской страховой компании. "
-                    + "На основе описания страхового случая ответь только одним из двух вариантов: "
-                    + "\"Вероятно одобрить\", \"Вероятно отказать\". "
-                    + "Описание: " + description.getDescription();
+            String prompt = "You are an assistant at a health insurance company. "
+                    + "Based on the description of an insurance claim, make a verdict using only one of two options: "
+                    + "\"Likely to approve\", \"Likely to deny\". Then justify your decision."
+                    + "Description: " + description.getDescription();
 
-            // JSON без лишних переносов строк
             String requestBody = objectMapper.writeValueAsString(
                     new PromptRequest(model, prompt)
             );
@@ -41,14 +42,12 @@ public class OpenAiService {
 
             try (Response response = client.newCall(request).execute()) {
                 if (!response.isSuccessful()) {
-                    System.out.println(response.toString());
-                    return "Нужна дополнительная проверка (ошибка AI)";
+                    throw new InvalidUserClaimException(HttpStatus.valueOf(503), "Error during connection with AI");
                 }
 
                 String responseBody = response.body().string();
                 StringBuilder fullResponse = new StringBuilder();
 
-                // Разделяем на строки и собираем все response
                 String[] lines = responseBody.split("\\r?\\n");
                 for (String line : lines) {
                     JsonNode json = objectMapper.readTree(line);
@@ -62,7 +61,7 @@ public class OpenAiService {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return "Нужна дополнительная проверка (ошибка AI)";
+            throw new InvalidUserClaimException(HttpStatus.valueOf(500), "Error during solving claim");
         }
     }
 

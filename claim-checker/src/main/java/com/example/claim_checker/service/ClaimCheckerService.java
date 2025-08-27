@@ -1,25 +1,28 @@
 package com.example.claim_checker.service;
 
 import com.example.claim_checker.entity.Claim;
+
 import com.example.claim_checker.model.ClaimRequest;
 import com.example.claim_checker.model.ClaimResponse;
 import com.example.claim_checker.repository.ClaimRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
+
 
 @Service
 @RequiredArgsConstructor
 public class ClaimCheckerService {
 
     private final ClaimRepository claimRepository;
-    private final OpenAiService openAiService;
+    private final AiService aiService;
 
-    public ClaimResponse checkClaim(ClaimRequest request) throws JsonProcessingException {
-        String decision = openAiService.classifyClaim(request);
+    public ClaimResponse checkClaim(ClaimRequest request) {
 
 
-        // Сохраняем в базу
+        String decision = aiService.classifyClaim(request);
+
         Claim claim = Claim.builder()
                 .policyType(request.getPolicyType())
                 .date(request.getDate())

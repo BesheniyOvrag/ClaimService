@@ -12,3 +12,4 @@ public class ClaimRequest {
     private String date;
     private String description;
 }
+

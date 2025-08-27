@@ -22,5 +22,7 @@ public class Claim {
     @Column(length = 2000)
     private String description;
 
+    @Column(length = 2000)
     private String decision;
 }
+
