@@ -9,6 +9,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ClaimRequest {
     private String policyType;
+    private String name;
+    private String surname;
+    private String email;
     private String date;
     private String description;
 }
